@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="DAG Forge — безопасный AI-генератор Apache Airflow DAG" />
+    <title>DAG Forge · AI Airflow Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="DAG Forge">
+          <span class="brand-mark" aria-hidden="true">
+            <i></i><i></i><i></i><svg viewBox="0 0 42 42"><path d="M12 11 29 21 12 31M29 21h5" /></svg>
+          </span>
+          <span><b>DAG</b> Forge</span>
+        </a>
+        <nav class="nav" aria-label="Основная навигация">
+          <a class="active" href="#workspace"><span>⌁</span> Конструктор</a>
+          <a href="#result"><span>◇</span> Результат</a>
+          <a href="/docs" target="_blank"><span>↗</span> API Docs</a>
+        </nav>
+        <div class="sidebar-card">
+          <p class="eyebrow">SAFE BY DESIGN</p>
+          <h3>Модель планирует.<br />Код строит renderer.</h3>
+          <p>LLM не получает права записывать произвольный Python.</p>
+        </div>
+        <div class="sidebar-footer">
+          <span class="status-dot"></span>
+          <div><b id="modeText">Подключение…</b><small id="versionText">DAG Forge</small></div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="breadcrumb">WORKSPACE / <span>NEW PIPELINE</span></p>
+            <h1>Соберите DAG из обычного описания</h1>
+          </div>
+          <div class="top-actions">
+            <span class="pill"><span class="pulse"></span> AIRFLOW 3 READY</span>
+            <button class="icon-button" id="themeButton" type="button" title="Сменить тему">◐</button>
+          </div>
+        </header>
+
+        <section class="workspace" id="workspace">
+          <form class="builder-card" id="generatorForm">
+            <div class="section-heading">
+              <div><span class="step">01</span><div><h2>Задача конвейера</h2><p>Опишите бизнес-логику — детали оркестрации добавит планировщик.</p></div></div>
+              <span class="required">ОБЯЗАТЕЛЬНО</span>
+            </div>
+
+            <label class="prompt-field">
+              <textarea id="prompt" minlength="15" maxlength="5000" required placeholder="Например: каждое утро получать новые заказы из API, проверять обязательные поля, нормализовать даты и загружать в PostgreSQL…"></textarea>
+              <span><b id="charCount">0</b> / 5000</span>
+            </label>
+
+            <div class="examples-row">
+              <span>ПРИМЕРЫ</span>
+              <div id="examples" class="example-chips"><button type="button" class="skeleton-chip">Загрузка…</button></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section-heading compact">
+              <div><span class="step">02</span><div><h2>Контур данных</h2><p>Связи задаются по ID — секреты в код не попадут.</p></div></div>
+            </div>
+
+            <div class="field-grid">
+              <label><span>Источник</span><select id="source">
+                <option value="rest_api">REST API</option><option value="postgresql">PostgreSQL</option>
+                <option value="mysql">MySQL</option><option value="s3">Amazon S3</option>
+                <option value="local_file">Локальный файл</option>
+              </select></label>
+              <label><span>Airflow Connection источника</span><input id="sourceConnection" value="source_default" pattern="[A-Za-z][A-Za-z0-9_.-]*" /></label>
+              <div class="flow-arrow" aria-hidden="true">→</div>
+              <label><span>Назначение</span><select id="destination">
+                <option value="postgresql">PostgreSQL</option><option value="mysql">MySQL</option>
+                <option value="s3">Amazon S3</option><option value="bigquery">BigQuery</option>
+                <option value="snowflake">Snowflake</option><option value="local_file">Локальный файл</option>
+              </select></label>
+              <label><span>Airflow Connection назначения</span><input id="destinationConnection" value="destination_default" pattern="[A-Za-z][A-Za-z0-9_.-]*" /></label>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section-heading compact">
+              <div><span class="step">03</span><div><h2>Production-политики</h2><p>Надёжность и контроль качества добавляются до генерации.</p></div></div>
+            </div>
+
+            <div class="settings-grid">
+              <label><span>Расписание (cron)</span><input id="schedule" value="0 6 * * *" required /></label>
+              <label><span>Владелец</span><input id="owner" value="data-platform" required /></label>
+              <label><span>Policy pack</span><select id="policy"><option value="basic">Basic</option><option value="production" selected>Production</option><option value="strict">Strict</option></select></label>
+            </div>
+            <div class="toggle-row">
+              <label class="toggle"><input id="quality" type="checkbox" checked /><i></i><span><b>Data quality checks</b><small>Проверки до и после обработки</small></span></label>
+              <label class="toggle"><input id="notifications" type="checkbox" checked /><i></i><span><b>Уведомления</b><small>Финальный статус владельцу</small></span></label>
+            </div>
+
+            <button class="generate-button" id="generateButton" type="submit">
+              <span class="spark">✦</span><span class="button-copy"><b>Сгенерировать DAG</b><small>План → код → валидация</small></span><span class="button-arrow">→</span>
+            </button>
+            <p class="form-error" id="formError" role="alert"></p>
+          </form>
+
+          <section class="result-card" id="result">
+            <div class="empty-state" id="emptyState">
+              <div class="empty-graphic">
+                <span class="node n1"></span><span class="node n2"></span><span class="node n3"></span><span class="node n4"></span>
+                <svg viewBox="0 0 240 180"><path d="M65 48 120 90 180 48M120 90v45M65 48v86h55M180 48v86h-60" /></svg>
+                <div>✦</div>
+              </div>
+              <p class="eyebrow">ВАШ DAG ПОЯВИТСЯ ЗДЕСЬ</p>
+              <h2>От текста до проверенного<br />Python-файла</h2>
+              <p>Опишите задачу слева. Мы покажем план, зависимости, код и найденные риски.</p>
+              <div class="empty-features"><span>✓ AST-проверка</span><span>✓ Secret scan</span><span>✓ Cycle detection</span></div>
+            </div>
+
+            <div class="result-content hidden" id="resultContent">
+              <header class="result-header">
+                <div><p class="eyebrow" id="resultMode">GENERATION COMPLETE</p><h2 id="dagTitle">pipeline</h2><p id="dagDescription"></p></div>
+                <div class="score-ring" id="scoreRing"><strong id="scoreValue">—</strong><small>SCORE</small></div>
+              </header>
+              <div class="result-meta" id="resultMeta"></div>
+              <div class="tabs" role="tablist">
+                <button class="active" data-tab="graph" type="button">Граф</button>
+                <button data-tab="code" type="button">Python</button>
+                <button data-tab="checks" type="button">Проверки <em id="findingCount">0</em></button>
+                <button data-tab="spec" type="button">JSON Spec</button>
+              </div>
+              <div class="tab-panel active" id="tab-graph"><div class="graph-toolbar"><span>DEPENDENCY GRAPH</span><small>Слева направо · upstream → downstream</small></div><div id="dagGraph" class="dag-graph"></div></div>
+              <div class="tab-panel" id="tab-code"><div class="code-toolbar"><span id="fileName">generated_dag.py</span><div><button id="copyButton" type="button">Копировать</button><button id="downloadButton" class="download" type="button">↓ Скачать .py</button><button id="publishButton" class="airflow" type="button">↗ Открыть в Airflow</button></div></div><pre><code id="codeOutput"></code></pre></div>
+              <div class="tab-panel" id="tab-checks"><div id="validationOutput" class="validation-list"></div></div>
+              <div class="tab-panel" id="tab-spec"><div class="code-toolbar"><span>dag_spec.json</span></div><pre><code id="specOutput"></code></pre></div>
+              <div class="notes" id="generationNotes"></div>
+            </div>
+            <div class="loading-state hidden" id="loadingState"><div class="loader-orbit"><i></i><i></i><i></i><span>✦</span></div><h2>Проектируем конвейер</h2><p id="loadingText">Строим типизированный план…</p><div class="loading-bar"><i></i></div></div>
+          </section>
+        </section>
+      </main>
+    </div>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

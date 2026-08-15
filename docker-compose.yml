@@ -1,0 +1,54 @@
+services:
+  dagforge:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.6-luna}
+      AIRFLOW_DAGS_DIR: /app/generated
+      AIRFLOW_UI_URL: http://localhost:8080
+    volumes:
+      - ./generated:/app/generated
+    restart: unless-stopped
+
+  airflow-demo:
+    image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:3.3.0}
+    profiles: ["airflow-demo"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "true"
+      AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: "5"
+      AIRFLOW__DAG_PROCESSOR__MIN_FILE_PROCESS_INTERVAL: "2"
+    volumes:
+      - airflow-demo-data:/opt/airflow
+      - ./generated:/opt/airflow/dags:ro
+    command: ["airflow", "standalone"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+
+  airflow-check:
+    image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:3.3.0}
+    profiles: ["airflow-test"]
+    environment:
+      AIRFLOW_HOME: /tmp/airflow
+      AIRFLOW__CORE__DAGS_FOLDER: /tmp/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////tmp/airflow/airflow.db
+      PYTHONPATH: /opt/dagforge/src
+    volumes:
+      - .:/opt/dagforge:ro
+    command: ["bash", "/opt/dagforge/scripts/check_airflow.sh"]
+
+volumes:
+  airflow-demo-data:
